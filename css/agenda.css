@@ -1,0 +1,76 @@
+/* styles.css */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #eaf4ff;
+    color: #333;
+  }
+  
+  .header {
+    background-color: #d9e9f3;
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    
+  }
+  
+  .form-section {
+    background-color: #fff;
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: bold;
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 0.8rem;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  
+  button {
+    background-color: #ffcc00;
+    color: #000;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 2rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #e6b800;
+  }
+  
+  .appointments-section {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+  }
+  
+  .appointments-section h2 {
+    color: #004d7a;
+    border-bottom: 2px solid #004d7a;
+    padding-bottom: 0.5rem;
+  }
+  
+  #lista-clases li {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 0.5rem;
+    background-color: #f4f9ff;
+    border-radius: 4px;
+  } 
+  

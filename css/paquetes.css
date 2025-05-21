@@ -1,0 +1,80 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    
+  }
+  
+  .planes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .plan {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    width: 260px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  
+  .plan:hover {
+    transform: scale(1.05);
+    border-color: #fca311;
+  }
+  
+  .plan h2 {
+    color: #14213d;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .precio {
+    font-size: 24px;
+    color: #fca311;
+    margin: 10px 0;
+  }
+  
+  .plan ul {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+    text-align: left;
+  }
+  
+  .plan ul li {
+    margin-bottom: 8px;
+    color: #333;
+  }
+  
+  .plan button {
+    background: #fca311;
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .plan button:hover {
+    background: #e08900;
+  }
+  
+  .destacado {
+    border: 2px solid #fca311;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+
+  .titulo-contenedor {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  
