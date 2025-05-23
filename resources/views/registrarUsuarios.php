@@ -3,7 +3,7 @@
 session_start();
 
 if (!isset($_SESSION['usuario'])) {
-    header('Location: login.php');
+    header('Location: /');
     exit;
 }
 ?>
@@ -47,7 +47,7 @@ if (!isset($_SESSION['usuario'])) {
                         <option value="">Seleccione un rol...</option>
                         <option value="docente">Docente</option>
                         <option value="estudiante">Estudiante</option>
-                        
+
                     </select>
                 </div>
             </div>
