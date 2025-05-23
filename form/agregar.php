@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,62 +10,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="style.css">
-    <title>FORMULARIO DE REGISTRO E INICIO SESIÓN</title>
+    <!-- <link rel="stylesheet" href="../css/style.css"> -->
+    <title>Formulario de Registro e Inicio de Sesión</title>
 </head>
+
 <body>
-<?php include "../inc/header.php" ?>
-    <div class="container-form register">
-        <div class="information">
-            <div class="info-childs">
-                <h2>Bienvenido</h2>
-                <p>Para unirte a nuestra comunidad por favor Inicia Sesión con tus datos</p>
-                <input type="button" value="Iniciar Sesión" id="sign-in">
-            </div>
-        </div>
-        <div class="form-information">
-            <div class="form-information-childs">
-                <h2>Crear una Cuenta</h2>
-                <div class="icons">
-                    <i class='bx bxl-google'></i>
-                    <i class='bx bxl-github'></i>
-                    <i class='bx bxl-linkedin' ></i>
-                </div>
-                <p>o usa tu email para registrarte</p>
-                <form class="form form-register" novalidate>
-                    <div>
-                        <label>
-                            <i class='bx bx-user' ></i>
-                            <input type="text" placeholder="Nombre Usuario" name="userName" >
-                        </label>
-                    </div>
-                    <div>
-                        <label >
-                            <i class='bx bx-envelope' ></i>
-                            <input type="email" placeholder="Correo Electronico" name="userEmail" >
-                        </label>
-                    </div>
-                   <div>
-                        <label>
-                            <i class='bx bx-lock-alt' ></i>
-                            <input type="password" placeholder="Contraseña" name="userPassword">
-                        </label>
-                   </div>
-                   
-                    <input type="submit" value="Registrarse">
-                    <div class="alerta-error">Todos los campos son obligatorios</div>
-                    <div class="alerta-exito">Te registraste correctamente</div>
-                </form>
-            </div>
-        </div>
-    </div>
 
+    <!-- Formulario de Registro -->
+    
 
-    <div class="container-form login hide">
+    <!-- Formulario de Login -->
+    <div class="container-form login ">
         <div class="information">
             <div class="info-childs">
                 <h2>¡¡Bienvenido nuevamente!!</h2>
-                <p>Para unirte a nuestra comunidad por favor Inicia Sesión con tus datos</p>
-                <input type="button" value="Registrarse" id="sign-up">
+                <p>Por favor inicia sesión con tus datos</p>
             </div>
         </div>
         <div class="form-information">
@@ -73,36 +33,30 @@
                 <div class="icons">
                     <i class='bx bxl-google'></i>
                     <i class='bx bxl-github'></i>
-                    <i class='bx bxl-linkedin' ></i>
+                    <i class='bx bxl-linkedin'></i>
                 </div>
-                <p>o Iniciar Sesión con una cuenta</p>
-                <form class="form form-login"novalidate>
+
+                <form class="form form-login" method="POST" action="../auth/loginController.php" novalidate>
                     <div>
-                        <label >
-                            <i class='bx bx-envelope' ></i>
-                            <input type="email" placeholder="Correo Electronico" name="userPassword">
+                        <label>
+                            <i class='bx bx-envelope'></i>
+                            <input type="email" placeholder="Correo Electrónico" name="userEmail" required>
                         </label>
                     </div>
                     <div>
                         <label>
-                            <i class='bx bx-lock-alt' ></i>
-                            <input type="password" placeholder="Contraseña" name="userPassword">
+                            <i class='bx bx-lock-alt'></i>
+                            <input type="password" placeholder="Contraseña" name="userPassword" required>
                         </label>
                     </div>
                     <input type="submit" value="Iniciar Sesión">
                     <div class="alerta-error">Todos los campos son obligatorios</div>
-                    <div class="alerta-exito">Te registraste correctamente</div>
+                    <div class="alerta-exito">Inicio de sesión exitoso</div>
                 </form>
             </div>
         </div>
     </div>
 
-     <!-- Footer Start -->
- <?php include "../inc/footer.php" ?>
- <!-- Footer End -->
-
-    <script src="script.js"></script>
-    <script src="js/register.js"></script>
-    <script src="js/login.js"></script>
 </body>
+
 </html>

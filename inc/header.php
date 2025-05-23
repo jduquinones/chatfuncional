@@ -56,7 +56,7 @@
                             </div>
                         </div>
                         <a href="contact.php" class="nav-item nav-link">Contactanos</a>
-                        <a href="form/index.php" class="nav-item nav-link"><i class="fa-solid fa-user-tie"></i></a>
+                        <a href="../form/agregar.php" class="nav-item nav-link"><i class="fa-solid fa-user-tie"></i></a>
                     </div>
                 </div>
             </nav>
