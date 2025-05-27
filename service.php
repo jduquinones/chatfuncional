@@ -1,45 +1,41 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8">
     <title>ClassOn Virtual</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
 
-    <!-- Favicon -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+
     <link href="img/favicon.ico" rel="icon">
-
-    <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Libraries Stylesheet -->
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
-
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="css/servicios.css">
+
+    <!-- Bootstrap y estilos -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/servicios.css" rel="stylesheet">
 </head>
 
 <body>
     <?php include "./inc/header.php" ?>
 
-    <!-- Header Start -->
     <div class="container-fluid page-header">
         <div class="container">
             <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 400px">
                 <h3 class="display-4 text-white text-uppercase">Servicios</h3>
                 <div class="d-inline-flex text-white">
-                    <p class="m-0 text-uppercase"><a class="text-white" href="">Inicio</a></p>
+                    <p class="m-0 text-uppercase"><a class="text-white" href="/">Inicio</a></p>
                     <i class="fa fa-angle-double-right pt-1 px-3"></i>
                     <p class="m-0 text-uppercase">Servicios</p>
                 </div>
@@ -47,58 +43,146 @@
         </div>
     </div>
 
+    <?php
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    ?>
 
-    <!-- Chat -->
-    <br><br>
-    <div class="chat-container">
-        <div class="sidebar">
-            <h2>Centro de atención</h2>
-            <ul id="user-list">
-                <li class="active">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="">
-                    <span class="username">José Hernández</span>
-                </li>
-                <li>
-                    <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="">
-                    <span class="username">Marta Salas</span>
-                </li>
-                <li>
-                    <img src="https://randomuser.me/api/portraits/men/76.jpg" alt="">
-                    <span class="username">Pedro Nieves</span>
-                </li>
-                <li>
-                    <img src="https://randomuser.me/api/portraits/women/66.jpg" alt="">
-                    <span class="username">Ana Ruiz</span>
-                </li>
-            </ul>
-        </div>
-
-        <div class="chat-main">
-            <div class="chat-header">Chat con <span id="chat-user">José Hernández</span></div>
-            <div class="chat-messages" id="chat-box">
-                <div class="message received">
-                    <p><strong>José Hernández:</strong> Hola, ¿me puedes ayudar con un tema?</p>
-                </div>
+    <?php if (isset($_SESSION['usuario']) && isset($_SESSION['allUsers'])): ?>
+        <br><br>
+        <div class="chat-container">
+            <div class="sidebar">
+                <h2>Centro de atención</h2>
+                <ul id="user-list">
+                    <?php foreach ($_SESSION['allUsers'] as $user): ?>
+                        <li class="user-item" data-user-id="<?= (int)$user['id'] ?>" onclick="loadChat(this, <?= (int)$user['id'] ?>, '<?= htmlspecialchars($user['nombre'], ENT_QUOTES) ?>')">
+                            <img src="https://randomuser.me/api/portraits/<?= ($user['gender'] ?? 'male') === 'female' ? 'women' : 'men' ?>/<?= rand(1, 99) ?>.jpg" alt="">
+                            <span class="username"><?= htmlspecialchars($user['nombre'] ?? 'Nombre no disponible') ?></span>
+                            <span class="user-role">(<?= htmlspecialchars($user['rol'] ?? 'Rol no definido') ?>)</span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             </div>
-            <form class="chat-input" id="message-form">
-                <button type="button" id="attach-btn">📎</button>
-                <input type="file" id="file-input" style="display:none;" accept="image/*,audio/*">
-                <input type="text" id="message" placeholder="Escribe un mensaje..." required>
-                <button type="submit">Enviar</button>
-            </form>
+
+            <div class="chat-main">
+                <div class="chat-header">Chat con <span id="chat-user">Seleccione un usuario</span></div>
+                <div class="chat-messages" id="chat-box">
+                    <div class="no-chat-selected">
+                        <p>Seleccione un usuario para comenzar a chatear</p>
+                    </div>
+                </div>
+                <form class="chat-input" id="message-form" style="display:none;">
+                    <button type="button" id="attach-btn">📎</button>
+                    <input type="file" id="file-input" style="display:none;" accept="image/*,audio/*">
+                    <input type="text" id="message" placeholder="Escribe un mensaje..." required>
+                    <button type="submit">Enviar</button>
+                </form>
+            </div>
         </div>
-    </div>
+
+        <script>
+            const socket = io('http://localhost:3001');
+
+            const currentUserId = <?= (int)$_SESSION['usuario']['id'] ?>;
+            let currentChatUserId = null;
+
+            socket.emit('join', currentUserId);
+
+            function loadChat(element, userId, userName) {
+                currentChatUserId = userId;
+                document.getElementById('chat-user').textContent = userName;
+                document.getElementById('message-form').style.display = 'flex';
+
+                document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+                element.classList.add('active');
+
+                // (opcional) puedes seguir usando fetch aquí para cargar historial
+                fetch(`./chat/get_messages.php?receiver_id=${userId}`)
+                    .then(res => res.json())
+                    .then(messages => {
+                        console.log(messages);
+
+                        const chatBox = document.getElementById('chat-box');
+                        chatBox.innerHTML = '';
+                        messages.forEach(msg => {
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message ${msg.sender_id == currentUserId ? 'sent' : 'received'}`;
+                            messageDiv.innerHTML = `<p><strong>${msg.sender_name}:</strong> ${msg.content}</p>`;
+                            chatBox.appendChild(messageDiv);
+                        });
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    });
+            }
+
+            document.getElementById('message-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (!currentChatUserId) return;
+
+                const input = document.getElementById('message');
+                const message = input.value.trim();
+                if (!message) return;
+
+                socket.emit('send_message', {
+                    from: currentUserId,
+                    to: currentChatUserId,
+                    message
+                });
+
+                appendMessage('Tú', message, true);
+                input.value = '';
+            });
+
+            socket.on('receive_message', function({
+                from,
+                message
+            }) {
+                if (from == currentChatUserId) {
+                    appendMessage('Ellos', message, false);
+                } else {
+                    // Puedes notificar o marcar como nuevo mensaje en la lista
+                    alert('Nuevo mensaje recibido');
+                }
+            });
+
+            function appendMessage(sender, message, isSent) {
+                const chatBox = document.getElementById('chat-box');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ' + (isSent ? 'sent' : 'received');
+                messageDiv.innerHTML = `<p><strong>${sender}:</strong> ${message}</p>`;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        </script>
 
 
-    <!-- Footer Start -->
-    <?php include "../inc/footer.php" ?>
-    <!-- Footer End -->
+        <style>
+            .user-item {
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
 
-    <!-- Back to Top -->
+            .user-item:hover {
+                background-color: #f0f0f0;
+            }
+
+            .user-item.active {
+                background-color: #e0e0e0;
+            }
+
+            .no-chat-selected {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
+                color: #888;
+            }
+        </style>
+    <?php endif; ?>
+
+    <?php include "./inc/footer.php" ?>
+
     <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
 
-
-    <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
     <script src="lib/easing/easing.min.js"></script>
@@ -107,13 +191,9 @@
     <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
     <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
 
-    <!-- Contact Javascript File -->
     <script src="mail/jqBootstrapValidation.min.js"></script>
     <script src="mail/contact.js"></script>
-
-    <!-- Template Javascript -->
     <script src="js/main.js"></script>
-
     <script src="js/servicios.js"></script>
 </body>
 

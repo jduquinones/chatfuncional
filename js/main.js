@@ -70,27 +70,27 @@
 
 
 
-document.getElementById('form-clase').addEventListener('submit', function(e) {
-    e.preventDefault();
+// document.getElementById('form-clase').addEventListener('submit', function(e) {
+//     e.preventDefault();
 
-    const nombre = document.getElementById('nombre').value.trim();
-    const fecha = document.getElementById('fecha').value;
-    const hora = document.getElementById('hora').value;
-    const duracion = document.getElementById('duracion').value;
-    const tema = document.getElementById('tema').value;
-    const notas = document.getElementById('notas').value.trim();
+//     const nombre = document.getElementById('nombre').value.trim();
+//     const fecha = document.getElementById('fecha').value;
+//     const hora = document.getElementById('hora').value;
+//     const duracion = document.getElementById('duracion').value;
+//     const tema = document.getElementById('tema').value;
+//     const notas = document.getElementById('notas').value.trim();
 
-    if (!nombre || !fecha || !hora || !duracion || !tema) {
-        alert('Por favor, complete todos los campos obligatorios.');
-        return;
-    }
+//     if (!nombre || !fecha || !hora || !duracion || !tema) {
+//         alert('Por favor, complete todos los campos obligatorios.');
+//         return;
+//     }
 
-    const lista = document.getElementById('lista-clases');
-    const li = document.createElement('li');
-    li.textContent = `${nombre} - ${tema} el ${fecha} a las ${hora} (${duracion} horas)`;
-    if (notas) li.textContent += ` - Notas: ${notas}`;
-    lista.appendChild(li);
+//     const lista = document.getElementById('lista-clases');
+//     const li = document.createElement('li');
+//     li.textContent = `${nombre} - ${tema} el ${fecha} a las ${hora} (${duracion} horas)`;
+//     if (notas) li.textContent += ` - Notas: ${notas}`;
+//     lista.appendChild(li);
 
-    document.getElementById('form-clase').reset();
-});
+//     document.getElementById('form-clase').reset();
+// });
 
