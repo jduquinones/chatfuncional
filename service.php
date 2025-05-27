@@ -28,6 +28,32 @@
 </head>
 
 <body>
+    <style>
+        .user-item {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .user-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .user-item.active {
+            background-color: #e0e0e0;
+        }
+
+        .no-chat-selected {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #888;
+        }
+
+        footer {
+            margin: 0;
+        }
+    </style>
     <?php include "./inc/header.php" ?>
 
     <div class="container-fluid page-header">
@@ -44,8 +70,8 @@
     </div>
 
     <?php
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
+    // error_reporting(E_ALL);
+    // ini_set('display_errors', 1);
     ?>
 
     <?php if (isset($_SESSION['usuario']) && isset($_SESSION['allUsers'])): ?>
@@ -155,28 +181,7 @@
         </script>
 
 
-        <style>
-            .user-item {
-                cursor: pointer;
-                transition: background-color 0.3s;
-            }
 
-            .user-item:hover {
-                background-color: #f0f0f0;
-            }
-
-            .user-item.active {
-                background-color: #e0e0e0;
-            }
-
-            .no-chat-selected {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100%;
-                color: #888;
-            }
-        </style>
     <?php endif; ?>
 
     <?php include "./inc/footer.php" ?>

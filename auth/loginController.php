@@ -11,7 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['userPassword'] ?? '';
 
     if (empty($email) || empty($password)) {
-        echo json_encode(['status' => 'error', 'message' => 'Campos obligatorios']);
+        $_SESSION['mensaje'] = [
+            'tipo' => 'error',
+            'texto' => 'Todos los campos son obligatorios'
+        ];
+        header("Location: ../form/agregar.php");
+
         exit;
     }
 
@@ -31,8 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: ../service.php");
         exit;
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Correo o contraseña incorrectos']);
+        $_SESSION['mensaje'] = [
+            'tipo' => 'error',
+            'texto' => 'Correo o contraseña incorrectos'
+        ];
+        header("Location: ../form/agregar.php");
+
+        exit;
     }
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Método no permitido']);
+    $_SESSION['mensaje'] = [
+        'tipo' => 'error',
+        'texto' => 'Método no permitido'
+    ];
+    header("Location: ../form/agregar.php");
+
+    exit;
 }
