@@ -114,7 +114,7 @@
         </div>
     <?php endif; ?>
 
-    <div class="container-form register">
+    <div class="container-form register hide">
         <div class="information">
             <div class="info-childs">
                 <h2>Bienvenido</h2>
@@ -175,7 +175,7 @@
     </div>
 
 
-    <div class="container-form login hide">
+    <div class="container-form login ">
         <div class="information">
             <div class="info-childs">
                 <h2>¡¡Bienvenido nuevamente!!</h2>

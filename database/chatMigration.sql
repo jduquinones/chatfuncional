@@ -13,25 +13,33 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Tabla pivote: usuarios en salas de chat
-CREATE TABLE chat_room_user (
+CREATE TABLE chat_rooms (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id1 INT NOT NULL,
-    user_id2 INT NOT NULL,
-    FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    room_identifier VARCHAR(255) UNIQUE,
+    user1_id INT,
+    user2_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla: mensajes
+
+CREATE TABLE chat_room_user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    chat_room_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY (chat_room_id, user_id)
+);
+
 CREATE TABLE messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     chat_room_id INT NOT NULL,
     user_id INT NOT NULL,
-    contenido TEXT,
+    contenido TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
 
 
