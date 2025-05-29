@@ -1,0 +1,14 @@
+# Dependencias Node.js
+/node_modules/
+
+# Variables de entorno
+.env
+
+# Archivos temporales del sistema y editores comunes
+.DS_Store
+Thumbs.db
+*.log
+
+# Opcional: caché, builds o carpetas de dist (si las tienes)
+dist/
+build/
