@@ -2,13 +2,13 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const mysql = require("mysql2");
+require("dotenv").config(); // Cargar variables de entorno
 
-// Configurar base de datos
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "", // Cambia si tu XAMPP tiene contraseña
-  database: "classon",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
@@ -24,7 +24,6 @@ const io = new Server(server, {
   },
 });
 
-// Guardar usuarios conectados
 let onlineUsers = {};
 
 io.on("connection", (socket) => {
@@ -39,7 +38,6 @@ io.on("connection", (socket) => {
   socket.on("send_message", (data) => {
     const { from, to, message } = data;
 
-    // Obtener o crear chat_room
     const getOrCreateRoom = (callback) => {
       const identifier = [from, to].sort().join("_");
 
@@ -57,7 +55,18 @@ io.on("connection", (socket) => {
               [identifier, from, to],
               (err, result) => {
                 if (err) return console.error(err);
-                callback(result.insertId);
+                const chatRoomId = result.insertId;
+
+                // Insertar también en chat_room_user
+                db.query(
+                  "INSERT INTO chat_room_user (chat_room_id, user_id) VALUES (?, ?), (?, ?)",
+                  [chatRoomId, from, chatRoomId, to],
+                  (err) => {
+                    if (err)
+                      return console.error("Error en chat_room_user:", err);
+                    callback(chatRoomId);
+                  }
+                );
               }
             );
           }

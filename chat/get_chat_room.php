@@ -11,29 +11,21 @@ if (!$otherUserId) {
     exit;
 }
 
-// Buscar si existe chat_room para estos dos usuarios
-$stmt = $pdo->prepare("
-    SELECT cr.id 
-    FROM chat_rooms cr
-    JOIN chat_room_user cru1 ON cru1.chat_room_id = cr.id AND cru1.user_id = ?
-    JOIN chat_room_user cru2 ON cru2.chat_room_id = cr.id AND cru2.user_id = ?
-    LIMIT 1
-");
-$stmt->execute([$currentUserId, $otherUserId]);
+// Crear identificador consistente
+$ids = [$currentUserId, $otherUserId];
+sort($ids);
+$identifier = implode('_', $ids);
+
+// Buscar chat_room por identificador
+$stmt = $pdo->prepare("SELECT id FROM chat_rooms WHERE room_identifier = ?");
+$stmt->execute([$identifier]);
 $chatRoom = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$chatRoom) {
-    // Crear chat_room
-    $pdo->beginTransaction();
-
-    $stmt = $pdo->prepare("INSERT INTO chat_rooms () VALUES ()");
-    $stmt->execute();
+    // Crear chat_room si no existe
+    $stmt = $pdo->prepare("INSERT INTO chat_rooms (room_identifier, user1_id, user2_id) VALUES (?, ?, ?)");
+    $stmt->execute([$identifier, $ids[0], $ids[1]]);
     $chatRoomId = $pdo->lastInsertId();
-
-    $stmt = $pdo->prepare("INSERT INTO chat_room_user (chat_room_id, user_id) VALUES (?, ?), (?, ?)");
-    $stmt->execute([$chatRoomId, $currentUserId, $chatRoomId, $otherUserId]);
-
-    $pdo->commit();
 } else {
     $chatRoomId = $chatRoom['id'];
 }

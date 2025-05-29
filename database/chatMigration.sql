@@ -21,15 +21,14 @@ CREATE TABLE chat_rooms (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
-CREATE TABLE chat_room_user (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    chat_room_id INT NOT NULL,
-    user_id INT NOT NULL,
-    FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY (chat_room_id, user_id)
-);
+-- CREATE TABLE chat_room_user (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     chat_room_id INT NOT NULL,
+--     user_id INT NOT NULL,
+--     FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+--     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+--     UNIQUE KEY (chat_room_id, user_id)
+-- );
 
 CREATE TABLE messages (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -42,6 +42,24 @@
             background-color: #e0e0e0;
         }
 
+        .user-item.has-new-message {
+            font-weight: bold;
+            background-color: #fdf2d0;
+        }
+
+        .new-message-indicator {
+            margin-left: 10px;
+            color: green;
+            font-size: 1em;
+            display: none;
+            /* oculto por defecto */
+        }
+
+        .new-message-indicator.visible {
+            display: inline;
+        }
+
+
         .no-chat-selected {
             display: flex;
             justify-content: center;
@@ -49,7 +67,9 @@
             height: 100%;
             color: #888;
         }
-
+        .chat-main{
+            max-height: 50vh !important;
+        }
         footer {
             margin: 0;
         }
@@ -81,10 +101,13 @@
                 <h2>Centro de atención</h2>
                 <ul id="user-list">
                     <?php foreach ($_SESSION['allUsers'] as $user): ?>
-                        <li class="user-item" data-user-id="<?= (int)$user['id'] ?>" onclick="loadChat(this, <?= (int)$user['id'] ?>, '<?= htmlspecialchars($user['nombre'], ENT_QUOTES) ?>')">
-                            <img src="https://randomuser.me/api/portraits/<?= ($user['gender'] ?? 'male') === 'female' ? 'women' : 'men' ?>/<?= rand(1, 99) ?>.jpg" alt="">
+                        <li class="user-item" data-user-id="<?= (int) $user['id'] ?>"
+                            onclick="loadChat(this, <?= (int) $user['id'] ?>, '<?= htmlspecialchars($user['nombre'], ENT_QUOTES) ?>')">
+                            <img src="https://randomuser.me/api/portraits/<?= ($user['gender'] ?? 'male') === 'female' ? 'women' : 'men' ?>/<?= rand(1, 99) ?>.jpg"
+                                alt="">
                             <span class="username"><?= htmlspecialchars($user['nombre'] ?? 'Nombre no disponible') ?></span>
-                            <span class="user-role">(<?= htmlspecialchars($user['rol'] ?? 'Rol no definido') ?>)</span>
+                            <span class="new-message-indicator">🟢</span>
+                            
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -109,7 +132,7 @@
         <script>
             const socket = io('http://localhost:3001');
 
-            const currentUserId = <?= (int)$_SESSION['usuario']['id'] ?>;
+            const currentUserId = <?= (int) $_SESSION['usuario']['id'] ?>;
             let currentChatUserId = null;
 
             socket.emit('join', currentUserId);
@@ -119,28 +142,33 @@
                 document.getElementById('chat-user').textContent = userName;
                 document.getElementById('message-form').style.display = 'flex';
 
-                document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+                document.querySelectorAll('.user-item').forEach(item => {
+                    item.classList.remove('active');
+                    // Limpiar indicadores en todos
+                    const ind = item.querySelector('.new-message-indicator');
+                    if (ind) ind.classList.remove('visible');
+                    item.classList.remove('has-new-message');
+                });
                 element.classList.add('active');
 
                 // (opcional) puedes seguir usando fetch aquí para cargar historial
-                fetch(`./chat/get_messages.php?receiver_id=${userId}`)
+                fetch(`./chat/get_chat_room.php?user_id=${userId}`)
                     .then(res => res.json())
                     .then(messages => {
-                        console.log(messages);
-
                         const chatBox = document.getElementById('chat-box');
                         chatBox.innerHTML = '';
                         messages.forEach(msg => {
                             const messageDiv = document.createElement('div');
-                            messageDiv.className = `message ${msg.sender_id == currentUserId ? 'sent' : 'received'}`;
-                            messageDiv.innerHTML = `<p><strong>${msg.sender_name}:</strong> ${msg.content}</p>`;
+                            messageDiv.className = `message ${msg.user_id == currentUserId ? 'sent' : 'received'}`;
+                            messageDiv.innerHTML = `<p><strong>${msg.user_id == currentUserId ? 'Tú' : userName}:</strong> ${msg.contenido}</p>`;
                             chatBox.appendChild(messageDiv);
                         });
                         chatBox.scrollTop = chatBox.scrollHeight;
                     });
+
             }
 
-            document.getElementById('message-form').addEventListener('submit', function(e) {
+            document.getElementById('message-form').addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (!currentChatUserId) return;
 
@@ -158,15 +186,19 @@
                 input.value = '';
             });
 
-            socket.on('receive_message', function({
+            socket.on('receive_message', function ({
                 from,
                 message
             }) {
                 if (from == currentChatUserId) {
                     appendMessage('Ellos', message, false);
                 } else {
-                    // Puedes notificar o marcar como nuevo mensaje en la lista
-                    alert('Nuevo mensaje recibido');
+                    const userItem = document.querySelector(`.user-item[data-user-id="${from}"]`);
+                    if (userItem) {
+                        const indicator = userItem.querySelector('.new-message-indicator');
+                        if (indicator) indicator.classList.add('visible');
+                        userItem.classList.add('has-new-message'); // opcional para fondo/negrita
+                    }
                 }
             });
 

@@ -1,15 +1,17 @@
 <?php
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+require_once __DIR__ . '/../vendor/autoload.php'; // Ajusta la ruta según dónde esté tu vendor
 
+use Dotenv\Dotenv;
 
-/** Las credenciales se deben de cambiar segun en el host en donde corra la app */
-// $host = '172.26.96.1';
-$host = '127.0.0.1';
-$db = 'classonvirtual';
-$user = 'root';
-$pass = '123456';
+// Cargar variables de entorno del archivo .env
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../'); // Ruta a la carpeta raíz donde esté .env
+$dotenv->load();
+
+// Obtener variables de entorno
+$host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+$db   = $_ENV['DB_NAME'] ?? 'classonvirtual';
+$user = $_ENV['DB_USER'] ?? 'root';
+$pass = $_ENV['DB_PASS'] ?? '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
