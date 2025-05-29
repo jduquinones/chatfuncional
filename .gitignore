@@ -1,7 +1,8 @@
-# Dependencias Node.js
+# Ignorar dependencias
+/vendor/
 /node_modules/
 
-# Variables de entorno
+# Ignorar Variables de entorno
 .env
 
 # Archivos temporales del sistema y editores comunes
@@ -11,4 +12,3 @@ Thumbs.db
 
 # Opcional: caché, builds o carpetas de dist (si las tienes)
 dist/
-build/
