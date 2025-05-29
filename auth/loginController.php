@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $currentRole = $usuario['rol'];
 
         if ($currentRole === 'docente') {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol = 'estudiante'");
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('estudiante', 'admin')");
             $stmt->execute();
             $_SESSION['allUsers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } elseif ($currentRole === 'estudiante') {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol = 'docente'");
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('docente' ,'admin')");
             $stmt->execute();
             $_SESSION['allUsers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {

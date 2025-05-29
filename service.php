@@ -67,9 +67,11 @@
             height: 100%;
             color: #888;
         }
-        .chat-main{
+
+        .chat-main {
             max-height: 50vh !important;
         }
+
         footer {
             margin: 0;
         }
@@ -105,9 +107,9 @@
                             onclick="loadChat(this, <?= (int) $user['id'] ?>, '<?= htmlspecialchars($user['nombre'], ENT_QUOTES) ?>')">
                             <img src="https://randomuser.me/api/portraits/<?= ($user['gender'] ?? 'male') === 'female' ? 'women' : 'men' ?>/<?= rand(1, 99) ?>.jpg"
                                 alt="">
-                            <span class="username"><?= htmlspecialchars($user['nombre'] ?? 'Nombre no disponible') ?></span>
                             <span class="new-message-indicator">🟢</span>
-                            
+                            <span class="username"><?= htmlspecialchars($user['nombre'] ?? 'Nombre no disponible') ?></span>
+                            <span class="user-role">(<?= htmlspecialchars($user['rol'] ?? 'Rol no definido') ?>)</span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
