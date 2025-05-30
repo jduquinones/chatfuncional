@@ -52,7 +52,6 @@
             color: green;
             font-size: 1em;
             display: none;
-            /* oculto por defecto */
         }
 
         .new-message-indicator.visible {
@@ -75,6 +74,67 @@
         footer {
             margin: 0;
         }
+
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            color: #333;
+            cursor: pointer;
+            font-family: sans-serif;
+            font-size: 1em;
+        }
+
+        .file-upload-wrapper:hover {
+            background-color: #eee;
+        }
+
+        .file-upload-wrapper span {
+            display: inline-block;
+        }
+
+        #file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            padding-left: 56px;
+            z-index: 1;
+        }
+
+        #record-button,
+        #stop-button {
+            width: 30px;
+            height: 30px;
+            display: flex ;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .record-button-container {
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            margin: 0;
+        }
+        
     </style>
     <?php include "./inc/header.php" ?>
 
@@ -123,37 +183,142 @@
                     </div>
                 </div>
                 <form class="chat-input" id="message-form" style="display:none;">
-                    <button type="button" id="attach-btn">📎</button>
-                    <input type="file" id="file-input" style="display:none;" accept="image/*,audio/*">
+                    <div class="record-button-container">
+                        <button type="button" id="record-button">🎙️</button>
+                        <button type="button" id="stop-button" style="display:none;">✅</button>
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="file-input" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none;">
+                        <span>📎</span>
+                    </div>
                     <input type="text" id="message" placeholder="Escribe un mensaje..." required>
+
                     <button type="submit">Enviar</button>
+
                 </form>
             </div>
         </div>
 
         <script>
             const socket = io('http://localhost:3001');
-
             const currentUserId = <?= (int) $_SESSION['usuario']['id'] ?>;
             let currentChatUserId = null;
 
             socket.emit('join', currentUserId);
 
+            const messageForm = document.getElementById('message-form');
+            const messageInput = document.getElementById('message');
+            const fileInput = document.getElementById('file-input');
+            const fileUploadWrapper = document.querySelector('.file-upload-wrapper'); // Aunque no lo usemos directamente para el trigger aquí
+            const recordButton = document.getElementById('record-button');
+            const stopButton = document.getElementById('stop-button');
+            let mediaRecorder;
+            let audioChunks = [];
+
+
+            recordButton.addEventListener('click', async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64Audio = reader.result.split(',')[1];
+                            socket.emit('send_audio', {
+                                from: currentUserId,
+                                to: currentChatUserId,
+                                audioData: base64Audio,
+                                mimeType: 'audio/webm'
+                            });
+                            console.log('Audio grabado y enviado.');
+                            // Mostrar un mensaje para el remitente
+                            appendMessage('Tú', 'Audio enviado', true, { audio: true });
+                        };
+                        reader.readAsDataURL(audioBlob);
+                    };
+
+                    recordButton.style.display = 'none';
+                    stopButton.style.display = 'flex';
+                    mediaRecorder.start();
+                    console.log('Grabando audio...');
+
+                } catch (err) {
+                    console.error("Error al acceder al micrófono:", err);
+                    alert('No se pudo acceder al micrófono.');
+                }
+            });
+
+            stopButton.addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    recordButton.style.display = 'flex';
+                    stopButton.style.display = 'none';
+                    console.log('Grabación detenida.');
+                }
+            });
+
+            socket.on('receive_audio_url', function (audioData) {
+                if (audioData.from == currentChatUserId) {
+                    console.log('Audio recibido (URL):', audioData);
+                    const chatBox = document.getElementById('chat-box');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message received audio-message';
+                    const audio = document.createElement('audio');
+                    audio.controls = true;
+                    const audioUrl = `chat/download.php?ruta=${encodeURIComponent(audioData.ruta)}`;
+                    audio.src = audioUrl;
+                    messageDiv.innerHTML = '<p><strong>Te enviaron un audio:</strong></p>';
+                    messageDiv.appendChild(audio);
+                    chatBox.appendChild(messageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                } else {
+                    const userItem = document.querySelector(`.user-item[data-user-id="${audioData.from}"]`);
+                    if (userItem) {
+                        const indicator = userItem.querySelector('.new-message-indicator');
+                        if (indicator) indicator.classList.add('visible');
+                        userItem.classList.add('has-new-message');
+                    }
+                }
+            });
+
+            function appendMessage(sender, message, isSent, media = null) {
+                const chatBox = document.getElementById('chat-box');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ' + (isSent ? 'sent' : 'received');
+                let messageContent = `<p><strong>${sender}:</strong> ${message}</p>`;
+                if (media && media.audio) {
+                    messageContent = `<p><strong>${sender}:</strong> Audio enviado</p>`;
+                } else if (media && media.nombre && media.ruta) {
+                    const downloadUrl = `chat/download.php?ruta=${encodeURIComponent(media.ruta)}`;
+                    messageContent = `<p><strong>${sender} enviaron un archivo:</strong> <a href="${downloadUrl}" download="${media.nombre}">${media.nombre}</a></p>`;
+                }
+                messageDiv.innerHTML = messageContent;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
             function loadChat(element, userId, userName) {
                 currentChatUserId = userId;
                 document.getElementById('chat-user').textContent = userName;
-                document.getElementById('message-form').style.display = 'flex';
+                messageForm.style.display = 'flex';
 
                 document.querySelectorAll('.user-item').forEach(item => {
                     item.classList.remove('active');
-                    // Limpiar indicadores en todos
                     const ind = item.querySelector('.new-message-indicator');
                     if (ind) ind.classList.remove('visible');
                     item.classList.remove('has-new-message');
                 });
                 element.classList.add('active');
 
-                // (opcional) puedes seguir usando fetch aquí para cargar historial
                 fetch(`./chat/get_chat_room.php?user_id=${userId}`)
                     .then(res => res.json())
                     .then(messages => {
@@ -162,20 +327,55 @@
                         messages.forEach(msg => {
                             const messageDiv = document.createElement('div');
                             messageDiv.className = `message ${msg.user_id == currentUserId ? 'sent' : 'received'}`;
-                            messageDiv.innerHTML = `<p><strong>${msg.user_id == currentUserId ? 'Tú' : userName}:</strong> ${msg.contenido}</p>`;
+                            let messageContent = '';
+                            if (msg.archivo_nombre && msg.archivo_nombre.startsWith('audio')) {
+                                const audioUrl = `chat/download.php?ruta=${encodeURIComponent(msg.archivo_ruta)}`;
+                                messageContent = `<p><strong>${msg.user_id == currentUserId ? 'Tú' : userName} envió un audio:</strong></p><audio controls src="${audioUrl}"></audio>`;
+                            } else if (msg.archivo_nombre) {
+                                const downloadUrl = `chat/download.php?ruta=${encodeURIComponent(msg.archivo_ruta)}`;
+                                messageContent = `<p><strong>${msg.user_id == currentUserId ? 'Tú' : userName} enviaron un archivo:</strong> <a href="${downloadUrl}" download="${msg.archivo_nombre}">${msg.archivo_nombre}</a></p>`;
+                            } else {
+                                messageContent = `<p><strong>${msg.user_id == currentUserId ? 'Tú' : userName}:</strong> ${msg.contenido}</p>`;
+                            }
+                            messageDiv.innerHTML = messageContent;
                             chatBox.appendChild(messageDiv);
                         });
                         chatBox.scrollTop = chatBox.scrollHeight;
                     });
-
             }
 
-            document.getElementById('message-form').addEventListener('submit', function (e) {
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0 && currentChatUserId) {
+                    const file = fileInput.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function () {
+                        socket.emit('send_file', {
+                            from: currentUserId,
+                            to: currentChatUserId,
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            data: reader.result // ArrayBuffer del archivo
+                        });
+                        // console.log('Archivo seleccionado y emitido.');
+                        appendMessage('Tú', `Archivo adjunto: ${file.name}`, true, { nombre: file.name, ruta: `uploads/${Date.now()}_${file.name.replace(/\s+/g, '_')}` });
+                        fileInput.value = ''; // Limpiar el input después de enviar
+                    };
+
+                    reader.onerror = function (error) {
+                        console.error("Error al leer el archivo:", error);
+                    };
+
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+
+            messageForm.addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (!currentChatUserId) return;
 
-                const input = document.getElementById('message');
-                const message = input.value.trim();
+                const message = messageInput.value.trim();
                 if (!message) return;
 
                 socket.emit('send_message', {
@@ -185,13 +385,10 @@
                 });
 
                 appendMessage('Tú', message, true);
-                input.value = '';
+                messageInput.value = '';
             });
 
-            socket.on('receive_message', function ({
-                from,
-                message
-            }) {
+            socket.on('receive_message', function ({ from, message }) {
                 if (from == currentChatUserId) {
                     appendMessage('Ellos', message, false);
                 } else {
@@ -199,10 +396,50 @@
                     if (userItem) {
                         const indicator = userItem.querySelector('.new-message-indicator');
                         if (indicator) indicator.classList.add('visible');
-                        userItem.classList.add('has-new-message'); // opcional para fondo/negrita
+                        userItem.classList.add('has-new-message');
                     }
                 }
             });
+
+            socket.on('receive_file', function (fileData) {
+                if (fileData.from == currentChatUserId) {
+                    console.log('Archivo recibido:', fileData);
+                    const chatBox = document.getElementById('chat-box');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message received file-message';
+                    const downloadUrl = `chat/download.php?ruta=${encodeURIComponent(fileData.ruta)}`;
+                    const fileDisplay = `<p><strong>Te enviaron un archivo:</strong> <a href="/${fileData.ruta}" download="${fileData.name}">${fileData.name} (${(fileData.size / 1024).toFixed(2)} KB)</a></p>`;
+                    messageDiv.innerHTML = fileDisplay;
+                    chatBox.appendChild(messageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                } else {
+                    const userItem = document.querySelector(`.user-item[data-user-id="${fileData.from}"]`);
+                    if (userItem) {
+                        const indicator = userItem.querySelector('.new-message-indicator');
+                        if (indicator) indicator.classList.add('visible');
+                        userItem.classList.add('has-new-message');
+                    }
+                }
+            });
+
+            function arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function downloadFile(name, type, base64Data) {
+                const link = document.createElement('a');
+                link.href = `data:${type};base64,${base64Data}`;
+                link.download = name;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
 
             function appendMessage(sender, message, isSent) {
                 const chatBox = document.getElementById('chat-box');

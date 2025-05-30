@@ -102,9 +102,7 @@
     display: flex;
     background-color: #f9f9f9;
     border-top: 1px solid #ccc;
-    align-items: center;
- 
-
+    /* align-items: center; */
   }
   
   .chat-input input[type="text"] {
@@ -113,7 +111,8 @@
     border: 1px solid #ccc;
     border-radius: 8px;
     font-size: 1rem;
-   margin-left: 20px;
+    margin-left: 20px;
+    margin: 0;
   }
   
   .chat-input button[type="submit"] {

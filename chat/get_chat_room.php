@@ -32,7 +32,8 @@ if (!$chatRoom) {
 
 // Obtener mensajes del chat_room
 $stmt = $pdo->prepare("
-    SELECT m.id, m.contenido, m.user_id, u.nombre AS sender_name, m.created_at
+    SELECT m.id, m.contenido, m.user_id, u.nombre AS sender_name, m.created_at,
+           m.archivo_nombre, m.archivo_ruta, m.archivo_tipo
     FROM messages m
     JOIN users u ON u.id = m.user_id
     WHERE m.chat_room_id = ?

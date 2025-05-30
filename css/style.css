@@ -9817,7 +9817,7 @@ input, select, textarea {
 }
 
 button {
-  margin-top: 20px;
+  /* margin-top: 20px; */
   width: 100%;
   padding: 12px;
   background-color: #1d72b8;
