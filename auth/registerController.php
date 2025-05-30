@@ -40,7 +40,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Insertar usuario
     $stmt = $pdo->prepare("INSERT INTO users (nombre, email, password, rol) VALUES (?, ?, ?, ?)");
+
+
     if ($stmt->execute([$nombre, $email, $passwordHash, $rol])) {
+        $userId = $pdo->lastInsertId();
+
+
+        $_SESSION['mensaje'] = [
+            'tipo' => 'success',
+            'texto' => 'Usuario registrado correctamente'
+        ];
+
+        $data = [
+            'id' => $userId,
+            'nombre' => $nombre,
+            'email' => $email,
+            'rol' => $rol,
+            'gender' => 'male' // o el género correspondiente
+        ];
+
+        // Configurar la solicitud a Socket.io
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n",
+                'method'  => 'POST',
+                'content' => json_encode($data),
+                'timeout' => 5 // Tiempo de espera en segundos
+            ]
+        ];
+
+        $context  = stream_context_create($options);
+        $result = @file_get_contents('http://localhost:3001/user-registered', false, $context);
+
+        if ($result === FALSE) {
+            error_log("Error al notificar a Socket.io sobre nuevo usuario");
+        }
+
         $_SESSION['mensaje'] = [
             'tipo' => 'success',
             'texto' => 'Usuario registrado correctamente'

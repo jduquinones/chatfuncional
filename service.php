@@ -68,8 +68,12 @@
         }
 
         .chat-main {
-            max-height: 50vh !important;
+            height: calc(100vh - 120px);
+            /* Ajusta el 120px según la altura de tu header */
+            max-height: none !important;
+            overflow-y: auto;
         }
+
 
         footer {
             margin: 0;
@@ -156,7 +160,11 @@
     // ini_set('display_errors', 1);
     ?>
 
-    <?php if (isset($_SESSION['usuario']) && isset($_SESSION['allUsers'])): ?>
+    <?php if (isset($_SESSION['usuario']) && isset($_SESSION['allUsers'])):
+        // echo "Usuario encontrado:\n";
+        // print_r($_SESSION);
+        // echo "\n";
+    ?>
         <br><br>
         <div class="chat-container">
             <div class="sidebar">
@@ -200,11 +208,17 @@
         </div>
 
         <script>
-            const socket = io('http://localhost:3001');
-            const currentUserId = <?= (int) $_SESSION['usuario']['id'] ?>;
+            // Pasar datos de PHP a JavaScript de forma segura
+            const nombreUsuario = <?= json_encode($_SESSION['usuario']['nombre'] ?? '') ?>;
+            const currentUserId = <?= json_encode($_SESSION['usuario']['id'] ?? null) ?>;
             let currentChatUserId = null;
 
-            socket.emit('join', currentUserId);
+            // Conexión con Socket.io
+            const socket = io('http://localhost:3001', {
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
 
             const messageForm = document.getElementById('message-form');
             const messageInput = document.getElementById('message');
@@ -306,27 +320,53 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
+            // Unirse al chat con el ID de usuario
+            socket.on('connect', () => {
+                console.log('Conectado al servidor de chat');
+                if (currentUserId) {
+                    socket.emit('join', currentUserId);
+                }
+            });
+
+            // Manejar errores de conexión
+            socket.on('connect_error', (error) => {
+                console.error('Error de conexión:', error);
+            });
+
+            // Función para cargar el chat con un usuario
             function loadChat(element, userId, userName) {
+                // Validaciones básicas
+                if (!userId || userId === currentUserId) return;
+
                 currentChatUserId = userId;
                 document.getElementById('chat-user').textContent = userName;
                 messageForm.style.display = 'flex';
 
+                // Resetear selección anterior
                 document.querySelectorAll('.user-item').forEach(item => {
-                    item.classList.remove('active');
-                    const ind = item.querySelector('.new-message-indicator');
-                    if (ind) ind.classList.remove('visible');
-                    item.classList.remove('has-new-message');
+                    item.classList.remove('active', 'has-new-message');
+                    const indicator = item.querySelector('.new-message-indicator');
+                    if (indicator) indicator.classList.remove('visible');
                 });
+
+                // Marcar como activo
                 element.classList.add('active');
 
+                // Cargar historial del chat
                 fetch(`./chat/get_chat_room.php?user_id=${userId}`)
-                    .then(res => res.json())
+                    .then(res => {
+                        if (!res.ok) throw new Error('Error en la respuesta');
+                        return res.json();
+                    })
                     .then(messages => {
                         const chatBox = document.getElementById('chat-box');
                         chatBox.innerHTML = '';
+
                         messages.forEach(msg => {
+                            const isCurrentUser = msg.user_id == currentUserId;
                             const messageDiv = document.createElement('div');
                             messageDiv.className = `message ${msg.user_id == currentUserId ? 'sent' : 'received'}`;
+                            messageDiv.innerHTML = `<p><strong>${isCurrentUser ? 'Tú' : userName}:</strong> ${msg.contenido}</p>`;
                             let messageContent = '';
                             if (msg.archivo_nombre && msg.archivo_nombre.startsWith('audio')) {
                                 const audioUrl = `chat/download.php?ruta=${encodeURIComponent(msg.archivo_ruta)}`;
@@ -371,7 +411,8 @@
                 }
             });
 
-            messageForm.addEventListener('submit', function (e) {
+            // Enviar mensaje
+            document.getElementById('message-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 if (!currentChatUserId) return;
 
@@ -384,14 +425,32 @@
                     message
                 });
 
-                appendMessage('Tú', message, true);
-                messageInput.value = '';
+                // Mostrar mensaje localmente
+                const chatBox = document.getElementById('chat-box');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message sent';
+                messageDiv.innerHTML = `<p><strong>Tú:</strong> ${message}</p>`;
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                input.value = '';
             });
 
-            socket.on('receive_message', function ({ from, message }) {
-                if (from == currentChatUserId) {
-                    appendMessage('Ellos', message, false);
+            // Recibir mensajes
+            socket.on('receive_message', ({
+                from,
+                message
+            }) => {
+                if (from === currentChatUserId) {
+                    // Mensaje del chat actual
+                    const chatBox = document.getElementById('chat-box');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message received';
+                    messageDiv.innerHTML = `<p><strong>${document.getElementById('chat-user').textContent}:</strong> ${message}</p>`;
+                    chatBox.appendChild(messageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
                 } else {
+                    // Notificación de nuevo mensaje
                     const userItem = document.querySelector(`.user-item[data-user-id="${from}"]`);
                     if (userItem) {
                         const indicator = userItem.querySelector('.new-message-indicator');
@@ -449,6 +508,33 @@
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
+            // Nuevo usuario registrado
+            socket.on('new_user', (user) => {
+                const userList = document.getElementById('user-list');
+
+                // Evitar duplicados
+                if (document.querySelector(`.user-item[data-user-id="${user.id}"]`)) return;
+
+                const userItem = document.createElement('li');
+                userItem.className = 'user-item new-user';
+                userItem.dataset.userId = user.id;
+                userItem.onclick = () => loadChat(userItem, user.id, user.nombre);
+
+                userItem.innerHTML = `
+            <img src="https://randomuser.me/api/portraits/${user.gender === 'female' ? 'women' : 'men'}/${Math.floor(Math.random() * 99) + 1}.jpg" alt="">
+            <span class="status-indicator"></span>
+            <span class="username">${user.nombre}</span>
+            <span class="user-role">(${user.rol})</span>
+            ${user.id === currentUserId ? '<span class="badge bg-primary">Tú</span>' : ''}
+        `;
+
+                userList.appendChild(userItem);
+
+                // Animación para nuevo usuario
+                setTimeout(() => {
+                    userItem.classList.remove('new-user');
+                }, 3000);
+            });
         </script>
 
 

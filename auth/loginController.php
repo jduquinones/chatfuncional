@@ -1,5 +1,8 @@
 <?php
-session_start(); // ¡Debe estar al inicio siempre!
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+session_start();
 
 require_once '../database/database.php';
 
@@ -20,27 +23,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$email]);
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
+
     if ($usuario && password_verify($password, $usuario['password'])) {
         // Usuario autenticado, guardamos en sesión
         $_SESSION['usuario'] = $usuario;
+
+        // echo "Email recibido: $email\n\n";
+        // echo "Usuario encontrado:\n";
+        // print_r($_SESSION['usuario']);
+        // echo "\n";
 
         // Obtener usuarios según rol
         $currentRole = $usuario['rol'];
 
         if ($currentRole === 'docente') {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('estudiante', 'admin')");
-            $stmt->execute();
+            // Docentes ven estudiantes y admins (excepto ellos mismos)
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('estudiante', 'admin') AND id != ?");
+            $stmt->execute([$usuario['id']]);
             $_SESSION['allUsers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } elseif ($currentRole === 'estudiante') {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('docente' ,'admin')");
-            $stmt->execute();
+            // Estudiantes ven docentes y admins (excepto ellos mismos)
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE rol IN ('docente', 'admin') AND id != ?");
+            $stmt->execute([$usuario['id']]);
             $_SESSION['allUsers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
-            // admin u otros roles ven todos excepto a sí mismos
+            // Admins ven a TODOS los usuarios (excepto ellos mismos)
             $stmt = $pdo->prepare("SELECT * FROM users WHERE id != ?");
             $stmt->execute([$usuario['id']]);
             $_SESSION['allUsers'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+
+        // echo "Email recibido: $email\n\n";
+        // echo "Usuario encontrado:\n";
+        // print_r($_SESSION['allUsers']);
+        // echo "\n";
 
         header("Location: ../service.php");
         exit;

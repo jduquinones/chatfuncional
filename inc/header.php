@@ -56,7 +56,7 @@
                             </div>
                         </div>
                         <a href="contact.php" class="nav-item nav-link">Contactanos</a>
-                        <a href="<?php echo isset($_SESSION['usuario']) ? '../auth/logout.php' : '../form/agregar.php'; ?>" class="nav-item nav-link">
+                        <a href="<?php echo isset($_SESSION['usuario']) ? 'auth/logout.php' : 'form/agregar.php'; ?>" class="nav-item nav-link">
                             <i class="fa-solid <?php echo isset($_SESSION['usuario']) ? 'fa-right-from-bracket' : 'fa-user-tie'; ?>"></i>
                         </a>
                     </div>
