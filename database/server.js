@@ -25,6 +25,22 @@ const io = new Server(server, {
 });
 
 let onlineUsers = {};
+app.use(express.json());
+// En server.js, modifica la ruta /user-registered
+app.post("/user-registered", (req, res) => {
+  try {
+    const newUser = req.body;
+    if (!newUser || !newUser.id) {
+      return res.status(400).json({ error: "Datos de usuario incompletos" });
+    }
+
+    io.emit("new_user", newUser);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error en /user-registered:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 
 io.on("connection", (socket) => {
   console.log("Cliente conectado");
@@ -41,37 +57,32 @@ io.on("connection", (socket) => {
     const getOrCreateRoom = (callback) => {
       const identifier = [from, to].sort().join("_");
 
-      db.query(
-        "SELECT id FROM chat_rooms WHERE room_identifier = ?",
-        [identifier],
-        (err, results) => {
-          if (err) return console.error(err);
+      db.query("SELECT id FROM chat_rooms WHERE room_identifier = ?", [identifier], (err, results) => {
+        if (err) return console.error(err);
 
-          if (results.length > 0) {
-            callback(results[0].id);
-          } else {
-            db.query(
-              "INSERT INTO chat_rooms (room_identifier, user1_id, user2_id) VALUES (?, ?, ?)",
-              [identifier, from, to],
-              (err, result) => {
-                if (err) return console.error(err);
-                const chatRoomId = result.insertId;
+        if (results.length > 0) {
+          callback(results[0].id);
+        } else {
+          db.query(
+            "INSERT INTO chat_rooms (room_identifier, user1_id, user2_id) VALUES (?, ?, ?)",
+            [identifier, from, to],
+            (err, result) => {
+              if (err) return console.error(err);
+              const chatRoomId = result.insertId;
 
-                // Insertar también en chat_room_user
-                db.query(
-                  "INSERT INTO chat_room_user (chat_room_id, user_id) VALUES (?, ?), (?, ?)",
-                  [chatRoomId, from, chatRoomId, to],
-                  (err) => {
-                    if (err)
-                      return console.error("Error en chat_room_user:", err);
-                    callback(chatRoomId);
-                  }
-                );
-              }
-            );
-          }
+              // Insertar también en chat_room_user
+              db.query(
+                "INSERT INTO chat_room_user (chat_room_id, user_id) VALUES (?, ?), (?, ?)",
+                [chatRoomId, from, chatRoomId, to],
+                (err) => {
+                  if (err) return console.error("Error en chat_room_user:", err);
+                  callback(chatRoomId);
+                }
+              );
+            }
+          );
         }
-      );
+      });
     };
 
     getOrCreateRoom((chatRoomId) => {

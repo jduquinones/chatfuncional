@@ -158,6 +158,7 @@
                             <i class='bx bx-user-id-card'></i>
                             <select name="userRole" required>
                                 <option value="" disabled selected>Seleccione un rol...</option>
+                                <option value="admin">Admin</option>
                                 <option value="docente">Docente</option>
                                 <option value="estudiante">Estudiante</option>
                             </select>
@@ -219,8 +220,8 @@
     <!-- Footer End -->
 
     <script src="script.js"></script>
-    <script src="js/register.js"></script>
-    <script src="js/login.js"></script>
+    <!-- <script src="js/register.js"></script>
+    <script src="js/login.js"></script> -->
 </body>
 
 </html>
