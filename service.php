@@ -118,7 +118,7 @@
         #stop-button {
             width: 30px;
             height: 30px;
-            display: flex ;
+            display: flex;
             justify-content: center;
             align-items: center;
             color: white;
@@ -138,7 +138,6 @@
             cursor: pointer;
             margin: 0;
         }
-        
     </style>
     <?php include "./inc/header.php" ?>
 
@@ -164,7 +163,7 @@
         // echo "Usuario encontrado:\n";
         // print_r($_SESSION);
         // echo "\n";
-    ?>
+        ?>
         <br><br>
         <div class="chat-container">
             <div class="sidebar">
@@ -196,7 +195,8 @@
                         <button type="button" id="stop-button" style="display:none;">✅</button>
                     </div>
                     <div class="file-upload-wrapper">
-                        <input type="file" id="file-input" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none;">
+                        <input type="file" id="file-input" accept="image/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx"
+                            style="display:none;">
                         <span>📎</span>
                     </div>
                     <input type="text" id="message" placeholder="Escribe un mensaje..." required>
@@ -228,7 +228,10 @@
             const stopButton = document.getElementById('stop-button');
             let mediaRecorder;
             let audioChunks = [];
-
+            
+            fileUploadWrapper.addEventListener('click', () => {
+                fileInput.click(); // Simula un clic en el input de archivo oculto
+            });
 
             recordButton.addEventListener('click', async () => {
                 try {
@@ -398,7 +401,6 @@
                             size: file.size,
                             data: reader.result // ArrayBuffer del archivo
                         });
-                        // console.log('Archivo seleccionado y emitido.');
                         appendMessage('Tú', `Archivo adjunto: ${file.name}`, true, { nombre: file.name, ruta: `uploads/${Date.now()}_${file.name.replace(/\s+/g, '_')}` });
                         fileInput.value = ''; // Limpiar el input después de enviar
                     };
@@ -412,7 +414,7 @@
             });
 
             // Enviar mensaje
-            document.getElementById('message-form').addEventListener('submit', function(e) {
+            document.getElementById('message-form').addEventListener('submit', function (e) {
                 e.preventDefault();
                 if (!currentChatUserId) return;
 
