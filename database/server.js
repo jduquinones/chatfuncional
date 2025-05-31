@@ -115,56 +115,59 @@ io.on("connection", (socket) => {
 
     const getOrCreateRoomForFile = (callback) => {
       const identifier = [from, to].sort().join("_");
-      db.query(
-        "SELECT id FROM chat_rooms WHERE room_identifier = ?",
-        [identifier],
-        (err, results) => {
-          if (err) return console.error(err);
-          callback(results.length > 0 ? results[0].id : null);
-        }
-      );
+      db.query("SELECT id FROM chat_rooms WHERE room_identifier = ?", [identifier], (err, results) => {
+        if (err) return console.error(err);
+        callback(results.length > 0 ? results[0].id : null);
+      });
     };
 
     getOrCreateRoomForFile(async (chatRoomId) => {
-      if (chatRoomId) {
-        const fileName = `${Date.now()}_${name.replace(/\s+/g, "_")}`;
-        const filePath = path.join(UPLOAD_DIR, fileName);
-        const archivoRuta = `uploads/${fileName}`;
+      if (!chatRoomId) {
+        return console.error("No se encontró la sala de chat para el archivo.");
+      }
 
-        try {
-          // Convertir el ArrayBuffer a Buffer para escribir el archivo
-          const buffer = Buffer.from(data);
-          await fs.writeFile(filePath, buffer);
-          console.log(`Archivo guardado en: ${filePath}`);
+      const fileName = `${Date.now()}_${name.replace(/\s+/g, "_")}`;
+      const filePath = path.join(UPLOAD_DIR, fileName);
+      const archivoRuta = `uploads/${fileName}`;
 
-          db.query(
-            "INSERT INTO messages (chat_room_id, user_id, archivo_nombre, archivo_ruta, archivo_tipo) VALUES (?, ?, ?, ?, ?)",
-            [chatRoomId, from, name, archivoRuta, type],
-            (err) => {
-              if (err)
-                return console.error("Error al guardar info del archivo:", err);
+      try {
+        const buffer = Buffer.from(data);
+        await fs.writeFile(filePath, buffer);
+        console.log(`Archivo guardado en: ${filePath}`);
 
-              const receiverSocketId = onlineUsers[to];
-              if (receiverSocketId) {
-                io.to(receiverSocketId).emit("receive_file", {
-                  from,
-                  name,
-                  type,
-                  size,
-                  ruta: archivoRuta, // Enviamos la ruta del archivo guardado
-                });
-                console.log(
-                  `Info de archivo guardada en DB y ruta enviada a ${to}: ${name}`
-                );
-              }
+        db.query(
+          "INSERT INTO messages (chat_room_id, user_id, archivo_nombre, archivo_ruta, archivo_tipo) VALUES (?, ?, ?, ?, ?)",
+          [chatRoomId, from, name, archivoRuta, type],
+          (err) => {
+            if (err) {
+              return console.error("Error al guardar info del archivo:", err);
             }
-          );
-        } catch (error) {
-          console.error("Error al guardar el archivo:", error);
-          // Podrías emitir un error al cliente si lo deseas
-        }
-      } else {
-        console.error("No se encontró la sala de chat para el archivo.");
+
+            const receiverSocketId = onlineUsers[to];
+            if (receiverSocketId) {
+              io.to(receiverSocketId).emit("receive_file", {
+                from,
+                name,
+                type,
+                size,
+                ruta: archivoRuta,
+              });
+            }
+
+            // ✅ Confirmación al remitente
+            const senderSocketId = onlineUsers[from];
+            if (senderSocketId) {
+              io.to(senderSocketId).emit("file_saved_confirm", {
+                name,
+                ruta: archivoRuta,
+              });
+            }
+
+            console.log(`Archivo enviado a ${to} y confirmado a ${from}`);
+          }
+        );
+      } catch (error) {
+        console.error("Error al guardar el archivo:", error);
       }
     });
   });
@@ -174,14 +177,10 @@ io.on("connection", (socket) => {
 
     const getOrCreateRoomForAudio = (callback) => {
       const identifier = [from, to].sort().join("_");
-      db.query(
-        "SELECT id FROM chat_rooms WHERE room_identifier = ?",
-        [identifier],
-        (err, results) => {
-          if (err) return console.error(err);
-          callback(results.length > 0 ? results[0].id : null);
-        }
-      );
+      db.query("SELECT id FROM chat_rooms WHERE room_identifier = ?", [identifier], (err, results) => {
+        if (err) return console.error(err);
+        callback(results.length > 0 ? results[0].id : null);
+      });
     };
 
     getOrCreateRoomForAudio(async (chatRoomId) => {
@@ -201,8 +200,7 @@ io.on("connection", (socket) => {
             "INSERT INTO messages (chat_room_id, user_id, contenido, archivo_nombre, archivo_ruta, archivo_tipo) VALUES (?, ?, ?, ?, ?, ?)",
             [chatRoomId, from, null, archivoNombre, archivoRuta, archivoTipo],
             (err) => {
-              if (err)
-                return console.error("Error al guardar info del audio:", err);
+              if (err) return console.error("Error al guardar info del audio:", err);
 
               const receiverSocketId = onlineUsers[to];
               if (receiverSocketId) {
@@ -211,9 +209,7 @@ io.on("connection", (socket) => {
                   ruta: archivoRuta,
                   mimeType,
                 });
-                console.log(
-                  `Info de audio guardada en DB y URL enviada a ${to}`
-                );
+                console.log(`Info de audio guardada en DB y URL enviada a ${to}`);
               }
             }
           );

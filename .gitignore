@@ -1,6 +1,7 @@
 # Ignorar dependencias
 /vendor/
 /node_modules/
+/uploads/
 
 # Ignorar Variables de entorno
 .env

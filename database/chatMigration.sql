@@ -34,7 +34,10 @@ CREATE TABLE messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     chat_room_id INT NOT NULL,
     user_id INT NOT NULL,
-    contenido TEXT NOT NULL,
+    contenido TEXT,
+    archivo_nombre VARCHAR(255),
+    archivo_ruta VARCHAR(255),
+    archivo_tipo VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

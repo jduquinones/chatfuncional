@@ -163,7 +163,7 @@
         // echo "Usuario encontrado:\n";
         // print_r($_SESSION);
         // echo "\n";
-        ?>
+    ?>
         <br><br>
         <div class="chat-container">
             <div class="sidebar">
@@ -228,14 +228,16 @@
             const stopButton = document.getElementById('stop-button');
             let mediaRecorder;
             let audioChunks = [];
-            
+
             fileUploadWrapper.addEventListener('click', () => {
                 fileInput.click(); // Simula un clic en el input de archivo oculto
             });
 
             recordButton.addEventListener('click', async () => {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: true
+                    });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
 
@@ -246,7 +248,9 @@
                     };
 
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioBlob = new Blob(audioChunks, {
+                            type: 'audio/webm'
+                        });
                         const reader = new FileReader();
                         reader.onloadend = () => {
                             const base64Audio = reader.result.split(',')[1];
@@ -258,7 +262,9 @@
                             });
                             console.log('Audio grabado y enviado.');
                             // Mostrar un mensaje para el remitente
-                            appendMessage('Tú', 'Audio enviado', true, { audio: true });
+                            appendMessage('Tú', 'Audio enviado', true, {
+                                audio: true
+                            });
                         };
                         reader.readAsDataURL(audioBlob);
                     };
@@ -283,7 +289,7 @@
                 }
             });
 
-            socket.on('receive_audio_url', function (audioData) {
+            socket.on('receive_audio_url', function(audioData) {
                 if (audioData.from == currentChatUserId) {
                     console.log('Audio recibido (URL):', audioData);
                     const chatBox = document.getElementById('chat-box');
@@ -392,29 +398,48 @@
                     const file = fileInput.files[0];
                     const reader = new FileReader();
 
-                    reader.onload = function () {
+                    const timestamp = Date.now();
+                    const sanitizedName = file.name.replace(/\s+/g, '_');
+                    const uniqueFileName = `${timestamp}_${sanitizedName}`;
+
+                    reader.onload = function() {
                         socket.emit('send_file', {
                             from: currentUserId,
                             to: currentChatUserId,
-                            name: file.name,
+                            name: uniqueFileName,
                             type: file.type,
                             size: file.size,
-                            data: reader.result // ArrayBuffer del archivo
+                            data: reader.result // Enviar como ArrayBuffer
                         });
-                        appendMessage('Tú', `Archivo adjunto: ${file.name}`, true, { nombre: file.name, ruta: `uploads/${Date.now()}_${file.name.replace(/\s+/g, '_')}` });
-                        fileInput.value = ''; // Limpiar el input después de enviar
-                    };
 
-                    reader.onerror = function (error) {
-                        console.error("Error al leer el archivo:", error);
+                        // ❌ NO LLAMES appendMessage aquí todavía
+                        fileInput.value = '';
                     };
 
                     reader.readAsArrayBuffer(file);
                 }
             });
 
+            // ✅ Esperar confirmación del servidor antes de mostrar
+            socket.on('file_saved_confirm', (fileInfo) => {
+                appendMessage('Tú', `Archivo adjunto: ${fileInfo.name}`, true, {
+                    nombre: fileInfo.name,
+                    ruta: fileInfo.ruta
+                });
+            });
+
+            // Este escucha si el receptor es otro usuario
+            socket.on('receive_file', (fileInfo) => {
+                appendMessage('Otro', `Archivo adjunto: ${fileInfo.name}`, false, {
+                    nombre: fileInfo.name,
+                    ruta: fileInfo.ruta
+                });
+            });
+
+
+
             // Enviar mensaje
-            document.getElementById('message-form').addEventListener('submit', function (e) {
+            document.getElementById('message-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 if (!currentChatUserId) return;
 
@@ -435,7 +460,9 @@
                 chatBox.appendChild(messageDiv);
                 chatBox.scrollTop = chatBox.scrollHeight;
 
-                input.value = '';
+                // document.getElementById('file-input').value = "";
+
+                document.getElementById('message').value = "";
             });
 
             // Recibir mensajes
@@ -462,14 +489,21 @@
                 }
             });
 
-            socket.on('receive_file', function (fileData) {
+            socket.on('receive_file', function(fileData) {
                 if (fileData.from == currentChatUserId) {
                     console.log('Archivo recibido:', fileData);
                     const chatBox = document.getElementById('chat-box');
                     const messageDiv = document.createElement('div');
                     messageDiv.className = 'message received file-message';
-                    const downloadUrl = `chat/download.php?ruta=${encodeURIComponent(fileData.ruta)}`;
-                    const fileDisplay = `<p><strong>Te enviaron un archivo:</strong> <a href="/${fileData.ruta}" download="${fileData.name}">${fileData.name} (${(fileData.size / 1024).toFixed(2)} KB)</a></p>`;
+
+                    // Usar siempre el mismo método de descarga
+                    const downloadUrl = `chat/download.php?ruta=${encodeURIComponent(fileData.ruta)}&t=${Date.now()}`;
+                    const fileDisplay = `
+            <p><strong>Te enviaron un archivo:</strong> 
+            <a href="${downloadUrl}" download="${fileData.name}">
+                ${fileData.name} (${(fileData.size / 1024).toFixed(2)} KB)
+            </a></p>`;
+
                     messageDiv.innerHTML = fileDisplay;
                     chatBox.appendChild(messageDiv);
                     chatBox.scrollTop = chatBox.scrollHeight;
